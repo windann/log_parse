@@ -127,7 +127,7 @@ def parse(ignore_urls=[],
     urls = [elem['url'] for elem in urls_with_inf()]
 
     if ignore_www:
-        pattern = r'www.'
+        pattern = r':\/\/www.'
         repl = ''
         urls = [re.sub(pattern, repl, url, count=0) for url in urls]
 
