@@ -4,43 +4,29 @@ from collections import Counter
 import re
 
 
-def urls_with_inf():
+def urls_with_inf(data):
     url_inf_list = []
 
-    with open('log.log', 'r') as f:
-        # вся информация из файла, типы запросов, урлы, дата и т.д
-        data = f.read().split('\n')
-        date_pattern = r'\d{2}\/\w{3}\/\d{4}\s\d{2}:\d{2}:\d{2}'
-        type_request_pattern = r'"\w{3,7}'
-        pattern = r'http?\w:\/\/'
-        repl = 'http://'
+    date_pattern = r'\d{2}\/\w{3}\/\d{4}\s\d{2}:\d{2}:\d{2}'
+    type_request_pattern = r'"\w{3,7}'
+    pattern = r'\w{2,4}p?\w:\/\/'
+
+    for elem in data:
         elem_url_inf = {}
+        if re.search(date_pattern, elem) and re.search(type_request_pattern, elem) and re.search(pattern, elem):
+            elem_url_inf['date'] = re.findall(date_pattern, elem)[0]
+            elem_url_inf['request'] = re.findall(type_request_pattern, elem)[0].lstrip('"')
+            elem_url_inf['url'] = re.sub(pattern, '://', elem.split('?')[0].split()[3], count=0)
+            elem_url_inf['time'] = elem.split()[6]
+            url_inf_list.append(elem_url_inf)
 
-        for elem in data:
-
-            if re.search(date_pattern, elem) and re.search(type_request_pattern, elem) and re.search(pattern, elem):
-                elem_url_inf['date'] = re.findall(date_pattern, elem)[0]
-                elem_url_inf['request'] = re.findall(type_request_pattern, elem)[0].lstrip('"')
-
-                if '?' in elem.split()[3]:
-                    for i in range(len(elem.split()[3]) - 1, 0, -1):
-                        if elem.split()[3][i] == '?':
-                            break
-                    # добавляем чистый урл с приведённой к единой схеме запроса
-                    elem_url_inf['url'] = re.sub(pattern, repl, elem.split()[3][:i], count=0)
-                else:
-                    elem_url_inf['url'] = re.sub(pattern, repl, elem.split()[3], count=0)
-
-                elem_url_inf['time'] = elem.split()[6]
-                url_inf_list.append(elem_url_inf)
-                elem_url_inf = {}
 
     return url_inf_list
 
 
-def start_at_func(start_at, urls):
+def start_at_func(start_at, urls,data):
     when_start = 0
-    urls_date = [elem['date'] + ' ' + elem['url'] for elem in urls_with_inf()]
+    urls_date = [elem['date'] + ' ' + elem['url'] for elem in urls_with_inf(data)]
 
     for elem in urls_date:
         when_start += 1
@@ -51,8 +37,8 @@ def start_at_func(start_at, urls):
     return [url for url in urls[when_start:]]
 
 
-def stop_at_func(stop_at, urls):
-    urls_date = [elem['date'] + ' ' + elem['url'] for elem in urls_with_inf()]
+def stop_at_func(stop_at, urls,data):
+    urls_date = [elem['date'] + ' ' + elem['url'] for elem in urls_with_inf(data)]
 
     for j in range(len(urls_date[::-1]) - 1, 0, -1):
         when_finish = j
@@ -77,8 +63,8 @@ def ignore_urls_func(urls,ignore_urls):
                 urls.remove(url)
 
 
-def slow_queries_func():
-    urls_time = [(int(elem['time']), elem['url']) for elem in urls_with_inf()]
+def slow_queries_func(data):
+    urls_time = [(int(elem['time']), elem['url']) for elem in urls_with_inf(data)]
     urls_time.sort(key=lambda x: x[0], reverse=True)
 
     slow_time_list = []
@@ -110,13 +96,18 @@ def parse(ignore_urls=[],
           ignore_www=False,
           slow_queries=False,
           ignore_files=False):
+    with open('log.log', 'r') as f:
+        # вся информация из файла, типы запросов, урлы, дата и т.д
+        data = f.read().split('\n')
 
-    urls = [elem['url'] for elem in urls_with_inf()]
+    urls = [elem['url'] for elem in urls_with_inf(data)]
 
     if ignore_www:
-        pattern = r'www.'
-        repl = ''
-        urls = [re.sub(pattern, repl, url, count=0) for url in urls]
+        pattern = r':\/\/www\.'
+        new_urls = [url.replace('://www.','://') if re.search(pattern, url) else url for url in urls]
+        print(new_urls)
+        urls.clear()
+        urls = new_urls.copy()
 
     if ignore_files:
         ignore_files_func(urls)
@@ -125,17 +116,19 @@ def parse(ignore_urls=[],
         ignore_urls_func(urls, ignore_urls)
 
     if request_type:
-        urls_type = [elem['request'] + ' ' + elem['url'] for elem in urls_with_inf()]
+        urls_type = [elem['request'] + ' ' + elem['url'] for elem in urls_with_inf(data)]
         urls = [type for type in urls_type if request_type in type]
 
     if start_at:
-        urls = start_at_func(start_at, urls)
+        urls = start_at_func(start_at, urls, data)
 
     if stop_at:
-        urls = stop_at_func(stop_at, urls)
+        urls = stop_at_func(stop_at, urls, data)
 
     if slow_queries:
-        return slow_queries_func()
+        return slow_queries_func(data)
 
     c = Counter(urls).most_common(5)
     return [elem[1] for elem in c]
+
+print(parse())
