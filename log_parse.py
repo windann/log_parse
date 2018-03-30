@@ -47,7 +47,6 @@ def ignore_urls_func(urls,ignore_urls):
 
 def request_type_func(data, urls, request_type):
     urls_type = [(elem['request'], elem['url']) for elem in urls_with_inf(data)]
-    #urls = [type for type in urls_type if request_type in type]
     return [url[1] for url in urls_type if url[1] in urls and url[0] == request_type]
 
 
