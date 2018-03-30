@@ -62,34 +62,27 @@ def ignore_urls_func(urls,ignore_urls):
     return [re.sub(pattern, '://', url, count=0) for url in urls if url not in new_ignore_urls]
 
 
-def slow_queries_func(data):
-    urls_time = [(int(elem['time']), elem['url']) for elem in urls_with_inf(data)]
-    urls_time.sort(key=lambda x: x[0], reverse=True)
+def slow_queries_func(urls,data):
+    new_urls = []
+    new_urls_time = []
+    urls_time = [(elem['url'],int(elem['time'])) for elem in urls_with_inf(data)]
+    for url_t in urls_time:
+        if url_t[0] in urls:
+            new_urls_time.append(url_t)
+            new_urls.append(url_t[0])
 
-    slow_time_list = []
-    slow_list = []
-
-    for elem_with_time in urls_time:
-        for elem in urls_time[:5]:
-            if elem_with_time[1] == elem[1]:
-                slow_time_list.append(elem_with_time[1])
-                slow_list.append(elem_with_time)
-
-    c_s = Counter(slow_time_list)
+    c_t = dict(Counter(new_urls))
     avg_list = []
 
-    for elem_k, elem_v in c_s.items():
-        s_s = 0
-        for slow_elem in slow_list:
-            if elem_k == slow_elem[1]:
-                s_s += slow_elem[0]
-        avg_list.append(s_s // elem_v)
+    for url,kol in c_t.items():
+        summ = 0
+        for url_t in new_urls_time:
+            if url == url_t[0]:
+                summ += url_t[1]
 
-    return sorted(avg_list)[::-1]
+        avg_list.append(summ//kol)
 
-def new_slow_queries_func(data):
-
-
+    return sorted(avg_list)[::-1][:5]
 
 def parse(ignore_urls=[],
           start_at=None,
@@ -133,10 +126,11 @@ def parse(ignore_urls=[],
         urls = stop_at_func(stop_at, urls, data)
 
     if slow_queries:
-        return slow_queries_func(data)
+        return slow_queries_func(urls,data)
 
     c = Counter(urls).most_common(5)
-    print(c)
+
     return [elem[1] for elem in c]
 
-print(parse(ignore_urls=['http://www.sys.mail.ru/calendar/config/254/40263/','https://sys.mail.ru/calendar/config/254/40265/','http://sys.mail.ru/calendar/meeting/254/40265/']))
+print(parse(slow_queries=True))
+
