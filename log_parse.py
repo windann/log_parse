@@ -100,7 +100,6 @@ def parse(ignore_urls=[],
     if ignore_www:
         pattern = r':\/\/www\.'
         new_urls = [url.replace('://www.','://') if re.search(pattern, url) else url for url in urls]
-        print(new_urls)
         urls.clear()
         urls = new_urls.copy()
 
@@ -111,7 +110,6 @@ def parse(ignore_urls=[],
 
     if ignore_urls:
         new_urls = ignore_urls_func(urls, ignore_urls)
-        #print(new_urls)
         urls.clear()
         urls = new_urls.copy()
 
@@ -132,5 +130,4 @@ def parse(ignore_urls=[],
 
     return [elem[1] for elem in c]
 
-print(parse(slow_queries=True))
 
