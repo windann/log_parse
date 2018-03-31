@@ -94,7 +94,7 @@ def parse(ignore_urls=[],
 
     if start_at:
         urls = start_at_func(start_at, data)
-    print(urls)
+
     if stop_at:
         urls = stop_at_func(stop_at, data)
 
@@ -118,6 +118,5 @@ def parse(ignore_urls=[],
 
     return [elem[1] for elem in c]
 
-print(parse(start_at=datetime(2018, 3, 28, 11, 19, 41)))
 
 
