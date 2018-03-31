@@ -25,12 +25,12 @@ def urls_with_inf(data):
 
 
 def start_at_func(start_at, data):
-    urls_date = [(datetime.strptime(elem['date'].split()[0], '%d/%b/%Y'),elem['url']) for elem in urls_with_inf(data)]
+    urls_date = [(datetime.strptime(elem['date'], '%d/%b/%Y %H:%M:%S'),elem['url']) for elem in urls_with_inf(data)]
     return [url[1] for url in urls_date if url[0] >= start_at]
 
 
 def stop_at_func(stop_at, data):
-    urls_date = [(datetime.strptime(elem['date'].split()[0], '%d/%b/%Y'), elem['url']) for elem in urls_with_inf(data)]
+    urls_date = [(datetime.strptime(elem['date'].split()[0], '%d/%b/%Y %H:%M:%S'), elem['url']) for elem in urls_with_inf(data)]
     return [url[1] for url in urls_date if url[0] <= stop_at]
 
 
@@ -69,8 +69,9 @@ def slow_queries_func(urls,data):
                 summ += url_t[1]
 
         avg_list.append(summ//kol)
+        avg_list.sort(reverse=True)
 
-    return sorted(avg_list)[::-1][:5]
+    return avg_list[:5]
 
 
 def cleaning(urls, new_urls):
@@ -92,29 +93,23 @@ def parse(ignore_urls=[],
     urls = [elem['url'] for elem in urls_with_inf(data)]
 
     if start_at:
-        new_urls = start_at_func(start_at, data)
-        urls = cleaning(urls, new_urls)
-
+        urls = start_at_func(start_at, data)
+    print(urls)
     if stop_at:
-        new_urls = stop_at_func(stop_at, data)
-        urls = cleaning(urls, new_urls)
+        urls = stop_at_func(stop_at, data)
 
     if ignore_www:
         pattern = r':\/\/www\.'
-        new_urls = [url.replace('://www.','://') if re.search(pattern, url) else url for url in urls]
-        urls = cleaning(urls, new_urls)
+        urls = [url.replace('://www.','://') if re.search(pattern, url) else url for url in urls]
 
     if ignore_files:
-        new_urls = ignore_files_func(urls)
-        urls = cleaning(urls, new_urls)
+        urls = ignore_files_func(urls)
 
     if ignore_urls:
-        new_urls = ignore_urls_func(urls, ignore_urls)
-        urls = cleaning(urls, new_urls)
+        urls = ignore_urls_func(urls, ignore_urls)
 
     if request_type:
-        new_urls = request_type_func(data,urls,request_type)
-        urls = cleaning(urls, new_urls)
+        urls = request_type_func(data,urls,request_type)
 
     if slow_queries:
         return slow_queries_func(urls,data)
@@ -122,5 +117,7 @@ def parse(ignore_urls=[],
     c = Counter(urls).most_common(5)
 
     return [elem[1] for elem in c]
+
+print(parse(start_at=datetime(2018, 3, 28, 11, 19, 41)))
 
 
