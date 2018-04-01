@@ -51,25 +51,22 @@ def request_type_func(data, urls, request_type):
 
 
 def slow_queries_func(urls,data):
-    new_urls = []
-    new_urls_time = []
-    urls_time = [(elem['url'],int(elem['time'])) for elem in urls_with_inf(data)]
-    for url_t in urls_time:
-        if url_t[0] in urls:
-            new_urls_time.append(url_t)
-            new_urls.append(url_t[0])
 
-    c_t = dict(Counter(new_urls))
-    avg_list = []
+    urls_inf = urls_with_inf(data)
+    urls_time = {}
 
-    for url,kol in c_t.items():
-        summ = 0
-        for url_t in new_urls_time:
-            if url == url_t[0]:
-                summ += url_t[1]
+    for url in urls_inf:
+        if url['url'] in urls:
+            if url['url'] not in urls_time:
+                urls_time[url['url']] = int(url['time'])
+            else:
+                urls_time[url['url']] += int(url['time'])
 
-        avg_list.append(summ//kol)
-        avg_list.sort(reverse=True)
+    c_t = dict(Counter(urls))
+
+    avg_list = [time // c_t[url] for url, time in urls_time.items()]
+
+    avg_list.sort(reverse=True)
 
     return avg_list[:5]
 
@@ -113,5 +110,6 @@ def parse(ignore_urls=[],
 
     return [elem[1] for elem in c]
 
+print(parse(slow_queries=True))
 
 
