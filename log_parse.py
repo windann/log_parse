@@ -62,8 +62,7 @@ def slow_queries_func(urls,data):
             else:
                 urls_time[url['url']] += int(url['time'])
 
-    c_t = dict(Counter(urls))
-
+    c_t = Counter(urls)
     avg_list = [time // c_t[url] for url, time in urls_time.items()]
 
     avg_list.sort(reverse=True)
@@ -109,7 +108,3 @@ def parse(ignore_urls=[],
     c = Counter(urls).most_common(5)
 
     return [elem[1] for elem in c]
-
-print(parse(slow_queries=True))
-
-
