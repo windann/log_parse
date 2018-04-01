@@ -74,11 +74,6 @@ def slow_queries_func(urls,data):
     return avg_list[:5]
 
 
-def cleaning(urls, new_urls):
-    urls.clear()
-    return new_urls.copy()
-
-
 def parse(ignore_urls=[],
           start_at=None,
           stop_at=None,
